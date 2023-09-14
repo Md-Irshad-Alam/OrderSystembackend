@@ -4,7 +4,7 @@ const cors = require('cors');
 const config =require('./Config')
 const mongoose = require('mongoose');
 
-
+const port = process.env.PORT || 6060;
 const app = express();
 app.use(express.json());
 app.use(cors());
@@ -13,7 +13,7 @@ app.use(cors());
 
 app.use('/auth',router)
 
-app.listen(6060, async(req, res)=>{
+app.listen(port, async(req, res)=>{
 
    await mongoose.connect(config.Connect_db_URL)
    .then((responce)=>{
