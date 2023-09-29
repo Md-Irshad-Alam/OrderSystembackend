@@ -8,6 +8,7 @@ let generateToken = (user)=>{
     }, config.Secret_key)
 }
 const register = async(req,res)=>{
+
     let user = new Users({
         name: req.body.name,
         email: req.body.email,
@@ -16,12 +17,18 @@ const register = async(req,res)=>{
         isAdmin: req.body.isAdmin,
         
     })
-    user = await user.save();
-    
-    if(!user)
-    return res.status(400).send('the user cannot be created!')
+    let {email} = req.body;
+    let logeduser= await Users.find({email})
+    if(logeduser.length !=0){
+        return res.send("User already Logged in with email")
+    } else{
 
-    res.send(user);
+        user = await user.save();
+        return res.status(400).send('the user cannot be created!')
+
+    }  
+   
+    
 }
 
 const login = async(req, res) => {

@@ -3,7 +3,9 @@ const routers = express.Router();
 const middleware = require('./helpers/MIddleware')
 const {login, register, usercount, getLoggedInUser, updateUsers} = require("./Controller/UserControler")
 const {getOrderitems, additems,getOrders,updateOrderstatus, deleteOrderstatus } = require("./Controller/OrderCnt")
-const {addProduct, getproducts} = require('./Controller/ProductCnt')
+const { getproducts, AddProduct} = require('./Controller/ProductCnt')
+const upload = require('./helpers/MediaUpload')
+
 // user login routes
 routers.get('/', (req, res)=> res.send("i am live always "))
 routers.post('/register',register)
@@ -13,8 +15,9 @@ routers.put('/toggleuser/:id',  updateUsers)
 
 // Product Routes
 
-routers.post("/item",middleware, addProduct)
+// routers.post("/item",middleware, addProduct)
 routers.get("/getitems",middleware, getproducts)
+routers.post("/item",middleware,upload.single('image'), AddProduct)
 // Order Routes
 
 routers.post("/order", middleware, additems)

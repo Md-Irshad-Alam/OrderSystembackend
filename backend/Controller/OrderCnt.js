@@ -1,7 +1,6 @@
-
 const Order = require('../models/order');
-const { OrderItem } = require('../models/order-item');
-
+const OrderItem  = require('../models/order-item');
+const product = require('../models/product')
 const getOrderitems = async(req,res)=>{
     const orderList = await Order.find().populate('user',"name" ).sort({'dateOrdered': -1})
     .populate({ 
@@ -61,23 +60,69 @@ const getOrderitems = async(req,res)=>{
 
 
 const additems = async(req,res)=>{
-    const orderitemsid =Promise.all(req.body.orderItems.map(async(order) =>{
-        let neworderitem = new OrderItem({
-            quantity:order.quantity,
-            product:order.product
-        })
-        neworderitem = await neworderitem.save()
-        return neworderitem._id;
-    }))
-    const OrderId = await orderitemsid;
-    const totalPrices = await Promise.all(OrderId.map(async (orderItemId)=>{
-        const orderItem = await OrderItem.findById(orderItemId).populate('product', 'price');
+    const orderitemsid = Promise.all(req.body.orderItems.map(async (order) => {
+        try {
+          // Create a new order item
+          var neworderitem = new OrderItem({
+            quantity: order.quantity,
+            product: order.product,
+          });
+         
+          // Get the product by its ID
+          const getproduct = await product.findById(order.product);
+          
+          // Check if there is enough stock to fulfill the order
+          if (!getproduct || getproduct.countInStock < order.quantity) {
+              console.log(`Insufficient stock to fulfill the order ${getproduct.countInStock}`)
+           return res.status(301).send("Insufficient stock to fulfill the order");
+          }else{
+            const updatedQuantity = getproduct.countInStock - order.quantity;
+            await product.findByIdAndUpdate(order.product, {
+                countInStock: updatedQuantity,
+            }, { new: true });
+        
+            console.log("Stock updated after order:", updatedQuantity);
+        
+            // Remove the product if the stock count goes negative (optional)
+            if (updatedQuantity < 0) {
+                await product.findByIdAndRemove(order.product);
+            } else {
+                // Save the new order item
+              neworderitem =   await neworderitem.save();
+            }
+          }
       
-        const totalPrice = orderItem.product.price * orderItem.quantity;
-        return totalPrice
+          return neworderitem;
+        } catch (error) {
+            console.error(error);
+            res.status(400).send(error.message)
+          
+        }
+      }));
+   
+    var OrderId = await orderitemsid;
+    let checkproduct = await product.findById(OrderId !=null && OrderId.map(ele => ele.product));
+  console.log(checkproduct)
+
+    if(checkproduct ==null){
+        console.log( "product is not available ")
+        return 
+    }
+    const totalPrices = await Promise.all(OrderId.map(async (orderItemId)=>{
+        const orderItem = await OrderItem.findById(orderItemId._id).populate('product', 'price');
+        if(OrderItem ==null){
+            console.log("product sis not avai")
+            res.send("Product is avalibale ")
+        }else{
+            const totalPrice = orderItem.product.price * orderItem.quantity;
+            return totalPrice
+        }
+        
     }))
     const totalPrice = totalPrices.reduce((a,b) => a +b , 0);
-    console.log(OrderId)
+    
+   console.log(totalPrice)
+
     let order = new Order({
         orderItems: OrderId,
         shippingAddress1: req.body.shippingAddress1,
@@ -87,13 +132,17 @@ const additems = async(req,res)=>{
         user: req.body.user,
         totalPrice:totalPrice,
     })
-    console.log(order)
-    order = await order.save();
-    if(!order){
-        return res.status(400).send("order not created ")
-    }
-    res.send(order)
-
+    
+   if(checkproduct.countInStock > 0){
+        order = await order.save();
+        if(!order){
+            return res.status(400).send("order not created ")
+        }
+        res.send(order)
+   }else{
+   return res.send(" Order rejected due to Insufficient product")
+   }
+    
 }
 
 module.exports = {

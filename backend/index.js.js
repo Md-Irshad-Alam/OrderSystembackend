@@ -3,15 +3,14 @@ const router = require('./Routes');
 const cors = require('cors');
 const config =require('./Config')
 const mongoose = require('mongoose');
-
 const port = process.env.PORT || 6060;
 const app = express();
 app.use(express.json());
 app.use(cors());
 
-
-
 app.use('/auth',router)
+// enable the static url               provide the  Rooth path 
+app.use('/public/uplods', express.static('Public/uploads'))
 
 app.listen(port, async(req, res)=>{
 
