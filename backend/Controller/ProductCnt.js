@@ -11,7 +11,7 @@ const AddProduct=async(req, res)=>{
    try {
     const basepath = `${req.protocol}://${req.get('host')}/public/uplods/`
     const filename = req.file.filename;
-
+    
     let product = new Product({
         name: req.body.name,
         image:`${basepath}${filename}`,
@@ -21,10 +21,12 @@ const AddProduct=async(req, res)=>{
         category: req.body.category,
         countInStock: req.body.countInStock,
         rating: req.body.rating,
+        user: req.body.user
        
         
     })
     product = await product.save();
+    console.log(product)
     if(!product) 
     return res.status(500).send('The product cannot be created')
 

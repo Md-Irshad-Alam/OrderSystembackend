@@ -60,6 +60,7 @@ const getOrderitems = async(req,res)=>{
 
 
 const additems = async(req,res)=>{
+    
     const orderitemsid = Promise.all(req.body.orderItems.map(async (order) => {
         try {
           // Create a new order item
@@ -102,7 +103,7 @@ const additems = async(req,res)=>{
    
     var OrderId = await orderitemsid;
     let checkproduct = await product.findById(OrderId !=null && OrderId.map(ele => ele.product));
-  console.log(checkproduct)
+
 
     if(checkproduct ==null){
         console.log( "product is not available ")
@@ -111,7 +112,7 @@ const additems = async(req,res)=>{
     const totalPrices = await Promise.all(OrderId.map(async (orderItemId)=>{
         const orderItem = await OrderItem.findById(orderItemId._id).populate('product', 'price');
         if(OrderItem ==null){
-            console.log("product sis not avai")
+           
             res.send("Product is avalibale ")
         }else{
             const totalPrice = orderItem.product.price * orderItem.quantity;
@@ -121,7 +122,7 @@ const additems = async(req,res)=>{
     }))
     const totalPrice = totalPrices.reduce((a,b) => a +b , 0);
     
-   console.log(totalPrice)
+
 
     let order = new Order({
         orderItems: OrderId,
@@ -134,6 +135,7 @@ const additems = async(req,res)=>{
     })
     
    if(checkproduct.countInStock > 0){
+    console.log(order)
         order = await order.save();
         if(!order){
             return res.status(400).send("order not created ")
