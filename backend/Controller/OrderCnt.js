@@ -122,7 +122,7 @@ const additems = async(req,res)=>{
     }))
     const totalPrice = totalPrices.reduce((a,b) => a +b , 0);
     
-
+        
 
     let order = new Order({
         orderItems: OrderId,
